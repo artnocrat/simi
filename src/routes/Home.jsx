@@ -27,7 +27,7 @@ import {
  * before they have to speak. This removes a lot of the "what do I say" friction.
  */
 
-const GREETING = "Hi. I'm Simi. There's nothing you have to say the right way. Whenever you're ready, just start talking."
+const GREETING = "Hey. What's been going on with you"
 
 export default function Home() {
   const [phase, setPhase] = useState('entry') // 'entry' | 'conversation'
@@ -58,25 +58,90 @@ export default function Home() {
     if (s.user) setSignedIn(true)
   }, [])
 
-  // Greeting plays on first "Begin" click (browsers require user gesture for audio)
+  // Greeting plays on first "Begin" click (browsers require user gesture for audio).
+  //
+  // We play two pre-recorded files back-to-back:
+  //   1. /sounds/entry.mp3  — a soft chime/tone, ~1s
+  //   2. /sounds/greeting.mp3 — Simi's scripted hello, generated once with ElevenLabs
+  // Both live in /public so they're served as static assets. No API call, no delay.
+  //
+  // If either file is missing, we fall back gracefully (entry chime is optional;
+  // greeting falls back to live TTS).
   const playGreeting = async () => {
     if (greetingPlayed) return
     setGreetingPlayed(true)
     setPhase('conversation')
+
+    // 1. Entry chime — short, optional
+    try {
+      const chime = new Audio('/sounds/entry.mp3')
+      chime.volume = 0.5
+      await chime.play()
+      await new Promise(resolve => {
+        chime.onended = resolve
+        // Safety timeout so we don't hang if the chime is missing
+        setTimeout(resolve, 2000)
+      })
+    } catch (e) {
+      // No chime file — that's fine, just skip it
+    }
+
+    // 2. Simi's greeting
     setBlobState('speaking')
     setMessages(prev => [...prev, { role: 'assistant', content: GREETING }])
     addMessage('assistant', GREETING)
+
     try {
-      await speak(GREETING, {
-        onAmplitude: (a) => setAudioLevel(a),
-        onEnd: () => {
+      const greeting = new Audio('/sounds/greeting.mp3')
+
+      // Amplitude analysis so the blob pulses to Simi's voice
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)()
+        const source = ctx.createMediaElementSource(greeting)
+        const analyser = ctx.createAnalyser()
+        analyser.fftSize = 256
+        source.connect(analyser)
+        analyser.connect(ctx.destination)
+        const data = new Uint8Array(analyser.frequencyBinCount)
+        let raf
+        const tick = () => {
+          analyser.getByteFrequencyData(data)
+          let sum = 0
+          for (let i = 0; i < data.length; i++) sum += data[i]
+          setAudioLevel(Math.min(1, (sum / data.length) / 100))
+          raf = requestAnimationFrame(tick)
+        }
+        greeting.onplay = () => { raf = requestAnimationFrame(tick) }
+        greeting.onended = () => {
+          cancelAnimationFrame(raf)
+          ctx.close()
           setAudioLevel(0)
           setBlobState('idle')
         }
-      })
+      } catch (ampErr) {
+        // Amplitude analysis not supported; just play the audio plainly
+        greeting.onended = () => {
+          setAudioLevel(0)
+          setBlobState('idle')
+        }
+      }
+
+      await greeting.play()
     } catch (e) {
-      console.warn('TTS failed, continuing silently', e)
-      setBlobState('idle')
+      // Greeting MP3 missing — fall back to live TTS
+      console.warn('Pre-recorded greeting missing, falling back to live TTS', e)
+      try {
+        await speak(GREETING, {
+          onAmplitude: (a) => setAudioLevel(a),
+          onEnd: () => {
+            setAudioLevel(0)
+            setBlobState('idle')
+          }
+        })
+      } catch (ttsErr) {
+        console.warn('Live TTS also failed', ttsErr)
+        setBlobState('idle')
+      }
     }
   }
 
