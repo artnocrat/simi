@@ -1,15 +1,6 @@
 /**
  * Web Speech API wrapper.
- * Returns an object with start(), stop(), and event handlers.
- *
- * Known limitations:
- *  - Not supported in Firefox
- *  - Accuracy varies by accent; for Nigerian English, ask users to speak
- *    at a measured pace and the accuracy is decent.
- *
- * Upgrade path (Monday if time allows): record with MediaRecorder,
- * POST the blob to /api/transcribe which calls OpenAI Whisper or
- * Deepgram Nova-2 (has a Nigerian English model).
+ * Mobile-hardened version.
  */
 export function createRecognizer({ onPartial, onFinal, onError, onEnd }) {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -21,15 +12,18 @@ export function createRecognizer({ onPartial, onFinal, onError, onEnd }) {
     }
   }
 
-  const rec = new Recognition()
-  // Mobile browsers are unreliable with continuous mode — use non-continuous
-  // and restart the recognizer between utterances instead
   const isMobile = /Mobi|Android/i.test(navigator.userAgent)
+
+  const rec = new Recognition()
+  // Mobile Chrome is unreliable with continuous mode
   rec.continuous = !isMobile
   rec.interimResults = true
-  rec.lang = 'en-NG'
+  // en-NG often fails on mobile recognizer service; fall back to en-US which
+  // still handles Nigerian English accents reasonably well
+  rec.lang = isMobile ? 'en-US' : 'en-NG'
 
   let finalTranscript = ''
+  let stopped = false   // track whether user explicitly stopped, so we don't auto-restart
 
   rec.onresult = (event) => {
     let interim = ''
@@ -45,10 +39,23 @@ export function createRecognizer({ onPartial, onFinal, onError, onEnd }) {
   }
 
   rec.onerror = (event) => {
+    // Log every error so we can diagnose on mobile
+    console.error('SpeechRecognition error:', event.error, event)
+    // 'no-speech' on mobile fires when the recognizer times out but user is still speaking.
+    // Just restart silently.
+    if (event.error === 'no-speech' && !stopped) {
+      try { rec.start() } catch (e) {}
+      return
+    }
     onError?.(new Error(event.error || 'Recognition error'))
   }
 
   rec.onend = () => {
+    // On mobile, the recognizer auto-ends after short silence. If the user
+    // hasn't tapped stop, restart it so recording feels continuous.
+    if (isMobile && !stopped) {
+      try { rec.start(); return } catch (e) {}
+    }
     if (finalTranscript.trim()) onFinal?.(finalTranscript.trim())
     onEnd?.()
   }
@@ -57,17 +64,18 @@ export function createRecognizer({ onPartial, onFinal, onError, onEnd }) {
     supported: true,
     start: () => {
       finalTranscript = ''
+      stopped = false
       try { rec.start() } catch (e) { /* already started */ }
     },
     stop: () => {
+      stopped = true
       try { rec.stop() } catch (e) {}
     }
   }
 }
 
 /**
- * Audio level meter — for the blob to react to the user's voice.
- * Returns { start, stop, getLevel }.
+ * Audio level meter — unchanged.
  */
 export async function createAudioMeter() {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
