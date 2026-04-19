@@ -241,10 +241,10 @@ export default function Home() {
       }
 
       // Nudge sign-in after second user message (not too eager)
-      const userTurns = nextMessages.filter(m => m.role === 'user').length
-      if (userTurns === 2 && !signedIn) {
-        setTimeout(() => setShowSignIn(true), 2000)
-      }
+      // const userTurns = nextMessages.filter(m => m.role === 'user').length
+      // if (userTurns === 2 && !signedIn) {
+      //   setTimeout(() => setShowSignIn(true), 2000)
+      // }
     } catch (e) {
       setError(e.message)
       setIsThinking(false)
