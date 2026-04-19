@@ -27,7 +27,7 @@ import {
  * before they have to speak. This removes a lot of the "what do I say" friction.
  */
 
-const GREETING = "Hey. What's been going on with you"
+const GREETING = "Hello. What are you thinking right now? Whenever you're ready, just start talking."
 
 export default function Home() {
   const [phase, setPhase] = useState('entry') // 'entry' | 'conversation'
