@@ -1,0 +1,124 @@
+:root {
+  /* Warm nocturnal palette — the hour past midnight */
+  --bg: #0d0a08;
+  --bg-soft: #15110e;
+  --bg-elevated: #1c1713;
+  --ink: #f4ebe0;
+  --ink-muted: #a89984;
+  --ink-faint: #5c5147;
+
+  /* One warm accent — like a reading lamp */
+  --amber: #e8a75c;
+  --amber-soft: #c48843;
+  --amber-glow: rgba(232, 167, 92, 0.15);
+
+  /* Rare alerts */
+  --signal: #d97757;    /* Anthropic-esque warm red for crisis signals */
+  --signal-soft: #8a3e2a;
+
+  /* Type */
+  --font-display: 'Fraunces', 'Times New Roman', serif;
+  --font-body: 'Instrument Sans', system-ui, sans-serif;
+
+  /* Spacing scale */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-12: 3rem;
+  --s-16: 4rem;
+  --s-24: 6rem;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Subtle grain texture for atmosphere */
+  background-image:
+    radial-gradient(ellipse at top, rgba(232, 167, 92, 0.06), transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(217, 119, 87, 0.04), transparent 50%);
+}
+
+/* Grain overlay — real film feel */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+button {
+  font-family: inherit;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--amber);
+  text-decoration: none;
+  border-bottom: 1px solid var(--amber-glow);
+  transition: border-color 200ms ease;
+}
+a:hover { border-color: var(--amber); }
+
+::selection {
+  background: var(--amber-glow);
+  color: var(--ink);
+}
+
+/* Utility: a refined serif display treatment */
+.display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-style: normal;
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 50, 'WONK' 0;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.mono {
+  font-family: 'SF Mono', 'Menlo', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
+}
+
+/* Hide scrollbar for the quiet aesthetic, but keep scrolling */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInSlow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
