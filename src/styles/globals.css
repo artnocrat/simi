@@ -1,19 +1,19 @@
 :root {
-  /* Warm nocturnal palette — the hour past midnight */
-  --bg: #0d0a08;
-  --bg-soft: #15110e;
-  --bg-elevated: #1c1713;
-  --ink: #f4ebe0;
-  --ink-muted: #a89984;
-  --ink-faint: #5c5147;
+  /* Deep midnight palette — colder, truer 2 AM */
+  --bg: #060809;
+  --bg-soft: #0b0e10;
+  --bg-elevated: #121619;
+  --ink: #e8ecef;
+  --ink-muted: #7a8a92;
+  --ink-faint: #3f4a50;
 
-  /* One warm accent — like a reading lamp */
-  --amber: #e8a75c;
-  --amber-soft: #c48843;
-  --amber-glow: rgba(232, 167, 92, 0.15);
+  /* Teal accent — the blue hour before dawn */
+  --amber: #5fd3c8;          /* kept the var name --amber for minimal churn */
+  --amber-soft: #3ea89e;
+  --amber-glow: rgba(95, 211, 200, 0.12);
 
-  /* Rare alerts */
-  --signal: #d97757;    /* Anthropic-esque warm red for crisis signals */
+  /* Warm signal for crisis — intentional contrast against the cold palette */
+  --signal: #e07856;
   --signal-soft: #8a3e2a;
 
   /* Type */
@@ -52,10 +52,10 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Subtle grain texture for atmosphere */
+  /* Subtle cold atmosphere */
   background-image:
-    radial-gradient(ellipse at top, rgba(232, 167, 92, 0.06), transparent 50%),
-    radial-gradient(ellipse at bottom left, rgba(217, 119, 87, 0.04), transparent 50%);
+    radial-gradient(ellipse at top, rgba(95, 211, 200, 0.04), transparent 55%),
+    radial-gradient(ellipse at bottom, rgba(40, 70, 85, 0.08), transparent 55%);
 }
 
 /* Grain overlay — real film feel */
