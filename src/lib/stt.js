@@ -22,9 +22,12 @@ export function createRecognizer({ onPartial, onFinal, onError, onEnd }) {
   }
 
   const rec = new Recognition()
-  rec.continuous = true
+  // Mobile browsers are unreliable with continuous mode — use non-continuous
+  // and restart the recognizer between utterances instead
+  const isMobile = /Mobi|Android/i.test(navigator.userAgent)
+  rec.continuous = !isMobile
   rec.interimResults = true
-  rec.lang = 'en-NG' // Nigerian English — falls back to en-US if unavailable
+  rec.lang = 'en-NG'
 
   let finalTranscript = ''
 
